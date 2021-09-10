@@ -9,10 +9,7 @@ use App\Models\Product;
 use App\Models\products_options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Image;
-use Mockery\Undefined;
-
-use function PHPSTORM_META\map;
+use Intervention\Image\Facades\Image;
 
 class ProductController extends Controller
 {
@@ -97,16 +94,25 @@ class ProductController extends Controller
         $image = $request->file('image');
 
         $path = 'public/products/1' . '/' . time() . rand(0, 100) . '.' . $image->getClientOriginalExtension();
-        $make = Image::make($image->getRealPath());
-        Storage::put($path, $make);
+        $make = Image::make($image);
+        Storage::put($path, $make->encode);
         $url = Storage::url($path);
         $product = Product::create([
             'name' => $request->name,
             'price' => $request->price,
             'category_id' => $request->category,
             'image' => $url,
-            'description' => $request->description
+            'description' => $request->description ?? ''
         ]);
+        $this->HandleProductOption($data, $product);
+        return response()->json([
+            'success' => true,
+            'message' => 'Product created',
+        ]);
+    }
+    public function HandleProductOption($data, $product)
+    {
+        products_options::where('product_id', $product->id)->delete();
         foreach ($data->groupBy('name') as $key => $value) {
             foreach ($value as $secondKey => $secondValue) {
                 $option = Option::firstOrCreate([
@@ -121,21 +127,17 @@ class ProductController extends Controller
                 ]);
             }
         }
-        return response()->json([
-            'success' => true,
-            'message' => 'Product created',
-        ]);
     }
-
     /**
      * Display the specified resource.
      *
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function show(Product $product)
+    public function show($product)
     {
-        //
+        $productShow = Product::where('id', $product)->with(['category', 'options.option'])->first();
+        return response()->json(['product' => $productShow]);
     }
 
     /**
@@ -159,6 +161,27 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         //
+        $data = collect(json_decode($request->options));
+        $updates = [];
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $path = 'public/products/1' . '/' . time() . rand(0, 100) . '.' . $image->getClientOriginalExtension();
+            $make = Image::make($image);
+            Storage::put($path, $make->encode());
+            $url = Storage::url($path);
+            $product->update(['image' => $url]);
+        }
+        $product->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'category_id' => $request->category,
+            'description' => $request->description ?? ''
+        ]);
+        $this->HandleProductOption($data, $product);
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated',
+        ]);
     }
 
     /**

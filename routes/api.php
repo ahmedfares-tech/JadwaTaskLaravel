@@ -30,9 +30,11 @@ Route::prefix('categories')->group(function () {
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
     Route::post('/', [ProductController::class, 'store']);
-    Route::get('/{product}' , [ProductController::class, 'play']);
-    Route::post('/calculation',[ProductController::class,'calculation']);
-    Route::post('/cart',[ProductController::class,'cart']);
+    Route::get('/{product}', [ProductController::class, 'play']);
+    Route::post('/calculation', [ProductController::class, 'calculation']);
+    Route::post('/cart', [ProductController::class, 'cart']);
+    Route::get('/edit/{product}', [ProductController::class, 'show']);
+    Route::post('/update/{product}', [ProductController::class, 'update']);
 });
 Route::middleware(['auth'])->group(function () {
     Route::prefix('user')->group(function () {

@@ -17,7 +17,7 @@ class CreateCategoriesTable extends Migration
             $table->id();
             $table->text('name');
             $table->text('image');
-            $table->foreignId('parent_id')->references('id')->on('categories')->nullable();
+            $table->foreignId('parent_id')->nullable()->references('id')->on('categories');
             $table->timestamps();
         });
     }

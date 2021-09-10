@@ -21,6 +21,7 @@ class CreateProductsOptionsTable extends Migration
             $table->foreignId('product_id')->references('id')->on('products');
             $table->foreignId('option_id')->references('id')->on('options');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
